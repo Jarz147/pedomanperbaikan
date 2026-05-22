@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Manual Book & Troubleshooting Log</title>
+    <!-- Tailwind CSS untuk Styling Modern -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- jQuery & Turn.js untuk Efek Buku (Menggunakan CDN yang stabil) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    
+    <style>
+        /* Desain Kustom untuk Efek Buku */
+        #book {
+            width: 900px;
+            height: 550px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        .page {
+            width: 450px;
+            height: 550px;
+            background: #fcfbf9; /* Warna kertas broken white */
+            box-shadow: inset 3px 0 10px rgba(0,0,0,0.05), inset -3px 0 10px rgba(0,0,0,0.05);
+        }
+        /* Efek bayangan pembatas di tengah buku */
+        .hard {
+            background: #1e293b !important; /* Sampul warna gelap */
+            color: white;
+        }
+        /* Sembunyikan scrollbar navigasi */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 min-h-screen text-slate-100 flex flex-col justify-between font-sans">
+
+    <!-- TOP BAR / HEADER -->
+    <header class="p-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex justify-between items-center px-8">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">📖</span>
+            <h1 class="text-lg font-bold tracking-wider text-indigo-400">LOG-BOOK // DIGITAL MANUAL</h1>
+        </div>
+        
+        <!-- Simulasi Switch Role (Guna keperluan demo lokal/GitHub Pages tanpa backend berat) -->
+        <div class="flex items-center gap-4 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700 text-sm">
+            <button id="btn-reader" onclick="switchRole('reader')" class="px-4 py-1.5 rounded-lg font-medium transition-all bg-indigo-600 text-white shadow-lg">Reader</button>
+            <button id="btn-writer" onclick="switchRole('writer')" class="px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-slate-200">Writer</button>
+        </div>
+    </header>
+
+    <!-- UTILITY BAR (Pencarian & Tombol Tambah) -->
+    <div class="max-w-5xl w-full mx-auto px-4 mt-6 flex justify-between items-center">
+        <div class="relative w-72">
+            <input type="text" id="search-input" onkeyup="searchBook()" placeholder="Cari masalah atau kode error..." class="w-full bg-slate-800/60 border border-slate-700 rounded-xl py-2 pl-4 pr-10 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+            <span class="absolute right-3 top-2.5 text-slate-500">🔍</span>
+        </div>
+        
+        <!-- Tombol Tambah Log (Hanya muncul jika Role = Writer) -->
+        <button id="add-log-btn" onclick="openModal()" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-lg shadow-indigo-600/20 items-center gap-2 transition-all">
+            <span>➕</span> Tambah Masalah Baru
+        </button>
+    </div>
+
+    <!-- MAIN AREA: BUKU DIGITAL -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div id="book" class="bg-slate-950 rounded-2xl overflow-hidden">
+            
+            <!-- Halaman 1: Cover Depan -->
+            <div class="hard flex flex-col justify-between p-12 text-center border-r border-slate-950">
+                <div class="mt-8">
+                    <span class="text-xs font-semibold tracking-widest text-indigo-400 uppercase">System Maintenance</span>
+                    <h2 class="text-3xl font-extrabold mt-2 tracking-tight">KUMPULAN LOG MASALAH & SOLUSI</h2>
+                    <div class="w-16 h-1 bg-indigo-500 mx-auto mt-6 rounded-full"></div>
+                </div>
+                <p class="text-xs text-slate-400">Klik ujung halaman atau gunakan tombol di bawah untuk membuka buku</p>
+            </div>
+
+            <!-- Halaman 2: Daftar Isi -->
+            <div class="page p-10 text-slate-800 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold border-b-2 border-slate-200 pb-3 text-slate-900 tracking-tight">Daftar Isi</h3>
+                    <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600">
+                        <!-- Diisi otomatis oleh JavaScript -->
+                    </ul>
+                </div>
+                <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
+            </div>
+
+            <!-- Konten halaman log akan di-render di sini oleh JavaScript -->
+
+        </div>
+    </main>
+
+    <!-- KONTROL NAVIGASI HALAMAN -->
+    <div class="flex justify-center items-center gap-6 mb-8 text-sm">
+        <button onclick="$('#book').turn('previous')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">◀ Sebelumnya</button>
+        <span id="page-number" class="font-mono text-slate-400">Halaman: 1</span>
+        <button onclick="$('#book').turn('next')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">Selanjutnya ▶</button>
+    </div>
+
+    <!-- MODAL POPUP: FORM TAMBAH LOG (KHUSUS WRITER) -->
+    <div id="writer-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
+                <h3 class="text-lg font-bold text-slate-100">Tambah Dokumentasi Kasus</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 text-xl">&times;</button>
+            </div>
+            <form id="log-form" onsubmit="saveNewLog(event)" class="space-y-4 text-sm text-slate-300">
+                <div>
+                    <label class="block font-medium mb-1">Judul Masalah / Kode Error</label>
+                    <input type="text" id="form-title" required placeholder="Contoh: Overheat pada Motor Konveyor Utama" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-medium mb-1">Kategori / Lokasi / Mesin</label>
+                    <input type="text" id="form-category" required placeholder="Contoh: Assembly Line 2 / Inverter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block font-medium mb-1">Deskripsi & Gejala Masalah</label>
+                    <textarea id="form-problem" rows="3" required placeholder="Jelaskan kondisi mesin saat error terjadi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
+                </div>
+                <div>
+                    <label class="block font-medium mb-1">Langkah Solusi / Perbaikan</label>
+                    <textarea id="form-solution" rows="4" required placeholder="1. Matikan breaker utama&#10;2. Ganti modul sensor... " class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
+                </div>
+                <div class="pt-2 flex justify-end gap-3">
+                    <button type="button" onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl">Batal</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-medium shadow-lg">Simpan ke Buku</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Data Awal Mockup (Disimpan di localStorage agar data baru tidak hilang saat di-refresh di GitHub)
+        let defaultData = [
+            {
+                title: "Error E-04 Overcurrent Inverter",
+                category: "Line 1 - Motor Conveyor",
+                problem: "Inverter Delta mendadak trip dan menampilkan kode E-04 saat beban material penuh pada jalur assembly robot.",
+                solution: "1. Periksa kekencangan kabel terminal output U-V-W.\n2. Cek bearing motor konveyor, lakukan pemberian grease karena sempat macet.\n3. Lakukan autotuning ulang parameter akselerasi diatur ke 2.5 detik."
+            },
+            {
+                title: "ESP32 Disconnected From Broker",
+                category: "IoT Gateway - Facility Monitoring",
+                problem: "Modul IoT Wemos D1 R32 kehilangan koneksi MQTT secara berkala setiap 15 menit, menyebabkan data logging terputus.",
+                solution: "1. Update script firmware dengan menambahkan logika auto-reconnect WiFi dan MQTT client loop.\n2. Berikan kapasitor elco 10uF pada jalur VCC 3.3V untuk meredam noise tegangan drop saat transmisi data."
+            }
+        ];
+
+        // Ambil data dari LocalStorage atau pakai default jika kosong
+        let database = JSON.parse(localStorage.getItem('manual_book_db')) || defaultData;
+        let currentRole = 'reader';
+
+        $(document).ready(function() {
+            initBook();
+            updateTableOfContents();
+            checkRoleUI();
+        });
+
+        // Inisialisasi plugin Turn.js
+        function initBook() {
+            renderPagesFromDatabase();
+
+            $('#book').turn({
+                acceleration: true,
+                gradients: true,
+                elevation: 50,
+                when: {
+                    turned: function(e, page) {
+                        $('#page-number').text("Halaman: " + page);
+                    }
+                }
+            });
+        }
+
+        // Render isi database ke dalam struktur halaman buku HTML
+        function renderPagesFromDatabase() {
+            // Hapus halaman dinamis lama jika ada (menyisakan Cover & Daftar isi)
+            $('.dynamic-page').remove();
+
+            database.forEach((item, index) => {
+                let pageNumberLeft = (index * 2) + 2;
+                let pageNumberRight = (index * 2) + 3;
+
+                let pageLeftHTML = `
+                    <div class="page dynamic-page p-10 text-slate-800 flex flex-col justify-between border-r border-slate-200">
+                        <div>
+                            <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-md mb-3">${item.category}</span>
+                            <h4 class="text-lg font-bold text-slate-900 leading-tight">${item.title}</h4>
+                            <div class="mt-5">
+                                <h5 class="text-xs font-bold tracking-wider uppercase text-red-600">⚠️ Detail Gejala Masalah:</h5>
+                                <p class="text-sm text-slate-600 mt-1.5 leading-relaxed">${item.problem.replace(/\n/g, '<br>')}</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-slate-400 font-mono text-left">Hal. ${pageNumberLeft}</span>
+                    </div>
+                `;
+
+                let pageRightHTML = `
+                    <div class="page dynamic-page p-10 text-slate-800 flex flex-col justify-between">
+                        <div>
+                            <h5 class="text-xs font-bold tracking-wider uppercase text-emerald-600">✅ Langkah Perbaikan / Solusi:</h5>
+                            <p class="text-sm text-slate-700 mt-2 font-medium leading-relaxed">${item.solution.replace(/\n/g, '<br>')}</p>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-slate-100 pt-3">
+                            <span class="text-[10px] text-slate-400">Sistem Log Digital</span>
+                            <span class="text-xs text-slate-400 font-mono">Hal. ${pageNumberRight}</span>
+                        </div>
+                    </div>
+                `;
+
+                $('#book').append(pageLeftHTML).append(pageRightHTML);
+            });
+        }
+
+        // Sinkronisasi Daftar Isi di Halaman 1
+        function updateTableOfContents() {
+            let listContainer = $('#table-of-contents');
+            listContainer.empty();
+
+            database.forEach((item, index) => {
+                let targetPage = (index * 2) + 2;
+                listContainer.append(`
+                    <li class="flex justify-between items-baseline cursor-pointer hover:text-indigo-600 transition-colors" onclick="jumpToPage(${targetPage})">
+                        <span class="truncate pr-2">${item.title}</span>
+                        <span class="border-b border-dashed border-slate-300 flex-grow"></span>
+                        <span class="font-mono pl-2 text-slate-400">Hal. ${targetPage}</span>
+                    </li>
+                `);
+            });
+        }
+
+        function jumpToPage(pageNumber) {
+            $('#book').turn('page', pageNumber);
+        }
+
+        // Mekanisme Switch Role Demo
+        function switchRole(role) {
+            currentRole = role;
+            if(role === 'writer') {
+                $('#btn-writer').addClass('bg-indigo-600 text-white shadow-lg').removeClass('text-slate-400');
+                $('#btn-reader').removeClass('bg-indigo-600 text-white shadow-lg').addClass('text-slate-400');
+            } else {
+                $('#btn-reader').addClass('bg-indigo-600 text-white shadow-lg').removeClass('text-slate-400');
+                $('#btn-writer').removeClass('bg-indigo-600 text-white shadow-lg').addClass('text-slate-400');
+            }
+            checkRoleUI();
+        }
+
+        function checkRoleUI() {
+            if(currentRole === 'writer') {
+                $('#add-log-btn').removeClass('hidden').addClass('flex');
+            } else {
+                $('#add-log-btn').addClass('hidden').removeClass('flex');
+            }
+        }
+
+        // Fungsi Cari Masalah (Search)
+        function searchBook() {
+            let query = $('#search-input').val().toLowerCase();
+            if(query.trim() === "") return;
+
+            let foundIndex = database.findIndex(item => 
+                item.title.toLowerCase().includes(query) || 
+                item.problem.toLowerCase().includes(query) || 
+                item.category.toLowerCase().includes(query)
+            );
+
+            if (foundIndex !== -1) {
+                let targetPage = (foundIndex * 2) + 2;
+                jumpToPage(targetPage);
+            }
+        }
+
+        // Kontrol Modal Box Form Input
+        function openModal() { $('#writer-modal').removeClass('hidden').addClass('flex'); }
+        function closeModal() { $('#writer-modal').addClass('hidden').removeClass('flex'); }
+
+        // Menyimpan Log Baru yang Diketik oleh Writer
+        function saveNewLog(e) {
+            e.preventDefault();
+            
+            let newLog = {
+                title: $('#form-title').val(),
+                category: $('#form-category').val(),
+                problem: $('#form-problem').val(),
+                solution: $('#form-solution').val()
+            };
+
+            database.push(newLog);
+            localStorage.setItem('manual_book_db', JSON.stringify(database));
+
+            // Hancurkan instance buku lama dan re-inisialisasi ulang datanya
+            $('#book').turn('destroy');
+            renderPagesFromDatabase();
+            
+            // Bangun kembali instance Turn.js baru
+            $('#book').turn({
+                acceleration: true,
+                gradients: true,
+                elevation: 50,
+                when: {
+                    turned: function(e, page) { $('#page-number').text("Halaman: " + page); }
+                }
+            });
+
+            updateTableOfContents();
+            closeModal();
+            $('#log-form')[0].reset();
+
+            // Lompat ke halaman log baru tersebut
+            let targetPage = (database.length * 2);
+            setTimeout(() => { jumpToPage(targetPage); }, 300);
+        }
+    </script>
+</body>
+</html>
