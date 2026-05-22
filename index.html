@@ -9,7 +9,7 @@
     <!-- jQuery & Turn.js untuk Efek Buku -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
-    <!-- Supabase JS Client library -->
+    <!-- Supabase JS Client library v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -138,8 +138,8 @@
         const SUPABASE_URL = "https://neapdsjsqpcsxhxjwyik.supabase.co"; 
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lYXBkc2pzcXBjc3hoeGp3eWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0Nzg0NjgsImV4cCI6MjA5NDA1NDQ2OH0.0MK6HwbDBA9jTj-_ESGvs-ErCvcnQqlqAVGqEv_gG-w";
         
-        // Inisialisasi Klien Supabase
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Inisialisasi Klien Supabase (Format Objek Global Library v2)
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let database = [];
         let currentRole = 'reader';
@@ -160,6 +160,7 @@
             if (error) {
                 alert("Gagal memuat data dari Supabase. Pastikan Anda sudah membuat tabel 'troubleshooting_logs' di dashboard.");
                 console.error(error);
+                $('#loading-screen').addClass('hidden').removeClass('flex');
                 return;
             }
 
