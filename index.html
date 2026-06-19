@@ -10,12 +10,20 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        #book-wrapper { width: 900px; height: 550px; }
+        #book-wrapper {
+            width: 900px;
+            height: 550px;
+        }
         .page {
-            width: 450px; height: 550px; background: #fcfbf9;
+            width: 450px;
+            height: 550px;
+            background: #fcfbf9;
             box-shadow: inset 3px 0 10px rgba(0,0,0,0.05), inset -3px 0 10px rgba(0,0,0,0.05);
         }
-        .hard { background: #1e293b !important; color: white; }
+        .hard {
+            background: #1e293b !important;
+            color: white;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -26,6 +34,7 @@
             <span class="text-2xl">📖</span>
             <h1 class="text-lg font-bold tracking-wider text-indigo-400">LOG-BOOK // DIGITAL MANUAL</h1>
         </div>
+        
         <div class="flex items-center gap-4 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700 text-sm">
             <button id="btn-reader" onclick="switchRole('reader')" class="px-4 py-1.5 rounded-lg font-medium transition-all bg-indigo-600 text-white shadow-lg">Reader</button>
             <button id="btn-writer" onclick="switchRole('writer')" class="px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-slate-200">Writer</button>
@@ -37,6 +46,7 @@
             <input type="text" id="search-input" onkeyup="searchBook()" placeholder="Cari masalah atau kode error..." class="w-full bg-slate-800/60 border border-slate-700 rounded-xl py-2 pl-4 pr-10 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
             <span class="absolute right-3 top-2.5 text-slate-500">🔍</span>
         </div>
+        
         <button id="add-log-btn" onclick="openModal('add')" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-lg shadow-indigo-600/20 items-center gap-2 transition-all">
             <span>➕</span> Tambah Masalah Baru
         </button>
@@ -53,10 +63,12 @@
                     </div>
                     <p class="text-xs text-slate-400">Klik ujung halaman atau gunakan tombol di bawah untuk membuka buku</p>
                 </div>
+
                 <div class="page p-10 text-slate-800 flex flex-col justify-between">
                     <div>
                         <h3 class="text-xl font-bold border-b-2 border-slate-200 pb-3 text-slate-900 tracking-tight">Daftar Isi</h3>
-                        <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600"></ul>
+                        <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600">
+                            </ul>
                     </div>
                     <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
                 </div>
@@ -80,19 +92,19 @@
                 <input type="hidden" id="form-edit-id" value="">
                 <div>
                     <label class="block font-medium mb-1">Judul Masalah / Kode Error</label>
-                    <input type="text" id="form-title" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="form-title" required placeholder="Contoh: Overheat pada Motor Konveyor Utama" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Kategori / Lokasi / Mesin</label>
-                    <input type="text" id="form-category" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="form-category" required placeholder="Contoh: Assembly Line 2 / Inverter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Deskripsi & Gejala Masalah</label>
-                    <textarea id="form-problem" rows="3" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
+                    <textarea id="form-problem" rows="3" required placeholder="Jelaskan kondisi mesin saat error terjadi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Langkah Solusi / Perbaikan</label>
-                    <textarea id="form-solution" rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
+                    <textarea id="form-solution" rows="4" required placeholder="Langkah-langkah penanganan..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
                 </div>
                 <div class="pt-2 flex justify-end gap-3">
                     <button type="button" onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl">Batal</button>
@@ -103,10 +115,12 @@
     </div>
 
     <script>
-        // Inisialisasi Supabase menggunakan kredensial milikmu
+        // Kredensial Supabase Anda
         const SUPABASE_URL = 'https://neapdsjsqpcsxhxjwyik.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lYXBkc2pzcXBjc3hoeGp3eWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0Nzg0NjgsImV4cCI6MjA5NDA1NDQ2OH0.0MK6HwbDBA9jTj-_ESGvs-ErCvcnQqlqAVGqEv_gG-w';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Menggunakan variabel 'supabaseClient' agar tidak bertabrakan dengan object bawaan CDN global
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let database = [];
         let currentRole = 'reader';
@@ -117,31 +131,45 @@
 
         // Ambil Data Nyata dari Supabase
         async function fetchDataFromSupabase() {
-            let { data, error } = await supabase
-                .from('troubleshooting_logs')
-                .select('*')
-                .order('created_at', { ascending: true }); // Mengurutkan berdasarkan data terlama
+            try {
+                let { data, error } = await supabaseClient
+                    .from('troubleshooting_logs')
+                    .select('*')
+                    .order('created_at', { ascending: true });
 
-            if (error) {
-                console.error("Gagal mengambil data dari Supabase:", error);
-                alert("Gagal memuat data dari database!");
-            } else {
+                if (error) throw error;
+
                 database = data || [];
+                initBook();
+            } catch (err) {
+                console.error("Detail Error Supabase:", err.message || err);
+                alert("Koneksi Database Supabase Gagal! Periksa setelan RLS di Dashboard Supabase.");
+                database = [];
                 initBook();
             }
         }
 
+        // Setup & Inisialisasi Turn.js Pertama Kali
         function initBook() {
             renderPagesFromDatabase();
             updateTableOfContents();
             
             $('#book').turn({
-                width: 900, height: 550, acceleration: true, gradients: true, elevation: 50,
-                when: { turned: function(e, page) { $('#page-number').text("Halaman: " + page); } }
+                width: 900,
+                height: 550,
+                acceleration: true,
+                gradients: true,
+                elevation: 50,
+                when: {
+                    turned: function(e, page) { 
+                        $('#page-number').text("Halaman: " + page); 
+                    }
+                }
             });
             checkRoleUI();
         }
 
+        // Fungsi Membangun Ulang Buku secara Aman saat data berubah (Insert / Update)
         function rebuildBook(targetPage = 1) {
             const initialPagesHTML = `
                 <div class="hard flex flex-col justify-between p-12 text-center border-r border-slate-950">
@@ -160,10 +188,13 @@
                     <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
                 </div>
             `;
+            
             $('#book').turn('destroy');
             $('#book-wrapper').html('<div id="book">' + initialPagesHTML + '</div>');
+            
             initBook();
-            setTimeout(() => { jumpToPage(targetPage); }, 100);
+
+            setTimeout(() => { jumpToPage(targetPage); }, 150);
         }
 
         function renderPagesFromDatabase() {
@@ -200,6 +231,7 @@
                         </div>
                     </div>
                 `;
+
                 $('#book').append(pageLeftHTML).append(pageRightHTML);
             });
         }
@@ -207,6 +239,7 @@
         function updateTableOfContents() {
             let listContainer = $('#table-of-contents');
             listContainer.empty();
+
             database.forEach((item, index) => {
                 let targetPage = (index * 2) + 2;
                 listContainer.append(`
@@ -248,12 +281,17 @@
         function searchBook() {
             let query = $('#search-input').val().toLowerCase();
             if(query.trim() === "") return;
+
             let foundIndex = database.findIndex(item => 
                 item.title.toLowerCase().includes(query) || 
                 item.problem.toLowerCase().includes(query) || 
                 item.category.toLowerCase().includes(query)
             );
-            if (foundIndex !== -1) { jumpToPage((foundIndex * 2) + 2); }
+
+            if (foundIndex !== -1) {
+                let targetPage = (foundIndex * 2) + 2;
+                jumpToPage(targetPage);
+            }
         }
 
         function openModal(mode, index = null) {
@@ -261,7 +299,7 @@
                 let targetData = database[index];
                 $('#modal-title').text('✏️ Edit Dokumentasi Kasus');
                 $('#submit-btn').text('Perbarui Halaman');
-                $('#form-edit-id').val(targetData.id); // Simpan UUID/ID Supabase
+                $('#form-edit-id').val(targetData.id); 
                 
                 $('#form-title').val(targetData.title);
                 $('#form-category').val(targetData.category);
@@ -278,7 +316,7 @@
 
         function closeModal() { $('#writer-modal').addClass('hidden').removeClass('flex'); }
 
-        // Aksi Submit Form (Insert & Update Supabase)
+        // Handler Submit untuk Simpan & Ubah Data Cloud Supabase
         async function handleFormSubmit(e) {
             e.preventDefault();
             let logId = $('#form-edit-id').val();
@@ -293,23 +331,22 @@
             closeModal();
 
             if (logId !== "") {
-                // Skenario Update Data
-                let { error } = await supabase
+                // Proses Aksi EDIT (Update)
+                let { error } = await supabaseClient
                     .from('troubleshooting_logs')
                     .update(logData)
                     .eq('id', logId);
 
                 if (!error) {
-                    // Update lokal array dan refresh buku di halaman yang sama
                     let idx = database.findIndex(item => item.id == logId);
                     database[idx] = { ...database[idx], ...logData };
                     rebuildBook((idx * 2) + 2);
                 } else {
-                    alert("Gagal memperbarui data!");
+                    alert("Gagal memperbarui data di Supabase!");
                 }
             } else {
-                // Skenario Insert Data Baru
-                let { data, error } = await supabase
+                // Proses Aksi TAMBAH BARU (Insert)
+                let { data, error } = await supabaseClient
                     .from('troubleshooting_logs')
                     .insert([logData])
                     .select();
@@ -318,7 +355,7 @@
                     database.push(data[0]);
                     rebuildBook(database.length * 2);
                 } else {
-                    alert("Gagal menyimpan data baru!");
+                    alert("Gagal menyimpan data baru ke Supabase!");
                 }
             }
         }
