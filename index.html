@@ -4,95 +4,72 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Manual Book & Troubleshooting Log</title>
-    <!-- Tailwind CSS untuk Styling Modern -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- jQuery & Turn.js untuk Efek Buku -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        #book {
-            width: 900px;
-            height: 550px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
+        #book-wrapper { width: 900px; height: 550px; }
         .page {
-            width: 450px;
-            height: 550px;
-            background: #fcfbf9;
+            width: 450px; height: 550px; background: #fcfbf9;
             box-shadow: inset 3px 0 10px rgba(0,0,0,0.05), inset -3px 0 10px rgba(0,0,0,0.05);
         }
-        .hard {
-            background: #1e293b !important;
-            color: white;
-        }
+        .hard { background: #1e293b !important; color: white; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 min-h-screen text-slate-100 flex flex-col justify-between font-sans">
 
-    <!-- TOP BAR / HEADER -->
     <header class="p-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex justify-between items-center px-8">
         <div class="flex items-center gap-3">
             <span class="text-2xl">📖</span>
             <h1 class="text-lg font-bold tracking-wider text-indigo-400">LOG-BOOK // DIGITAL MANUAL</h1>
         </div>
-        
-        <!-- Switch Role -->
         <div class="flex items-center gap-4 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700 text-sm">
             <button id="btn-reader" onclick="switchRole('reader')" class="px-4 py-1.5 rounded-lg font-medium transition-all bg-indigo-600 text-white shadow-lg">Reader</button>
             <button id="btn-writer" onclick="switchRole('writer')" class="px-4 py-1.5 rounded-lg font-medium transition-all text-slate-400 hover:text-slate-200">Writer</button>
         </div>
     </header>
 
-    <!-- UTILITY BAR -->
     <div class="max-w-5xl w-full mx-auto px-4 mt-6 flex justify-between items-center">
         <div class="relative w-72">
             <input type="text" id="search-input" onkeyup="searchBook()" placeholder="Cari masalah atau kode error..." class="w-full bg-slate-800/60 border border-slate-700 rounded-xl py-2 pl-4 pr-10 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
             <span class="absolute right-3 top-2.5 text-slate-500">🔍</span>
         </div>
-        
-        <!-- Tombol Tambah Log -->
         <button id="add-log-btn" onclick="openModal('add')" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-lg shadow-indigo-600/20 items-center gap-2 transition-all">
             <span>➕</span> Tambah Masalah Baru
         </button>
     </div>
 
-    <!-- MAIN AREA: BUKU DIGITAL -->
     <main class="flex-grow flex items-center justify-center p-4">
-        <div id="book" class="bg-slate-950 rounded-2xl overflow-hidden">
-            
-            <!-- Halaman 1: Cover Depan -->
-            <div class="hard flex flex-col justify-between p-12 text-center border-r border-slate-950">
-                <div class="mt-8">
-                    <span class="text-xs font-semibold tracking-widest text-indigo-400 uppercase">System Maintenance</span>
-                    <h2 class="text-3xl font-extrabold mt-2 tracking-tight">KUMPULAN LOG MASALAH & SOLUSI</h2>
-                    <div class="w-16 h-1 bg-indigo-500 mx-auto mt-6 rounded-full"></div>
+        <div id="book-wrapper" class="bg-slate-950 rounded-2xl overflow-hidden shadow-2xl shadow-black/50">
+            <div id="book">
+                <div class="hard flex flex-col justify-between p-12 text-center border-r border-slate-950">
+                    <div class="mt-8">
+                        <span class="text-xs font-semibold tracking-widest text-indigo-400 uppercase">System Maintenance</span>
+                        <h2 class="text-3xl font-extrabold mt-2 tracking-tight">KUMPULAN LOG MASALAH & SOLUSI</h2>
+                        <div class="w-16 h-1 bg-indigo-500 mx-auto mt-6 rounded-full"></div>
+                    </div>
+                    <p class="text-xs text-slate-400">Klik ujung halaman atau gunakan tombol di bawah untuk membuka buku</p>
                 </div>
-                <p class="text-xs text-slate-400">Klik ujung halaman atau gunakan tombol di bawah untuk membuka buku</p>
-            </div>
-
-            <!-- Halaman 2: Daftar Isi -->
-            <div class="page p-10 text-slate-800 flex flex-col justify-between">
-                <div>
-                    <h3 class="text-xl font-bold border-b-2 border-slate-200 pb-3 text-slate-900 tracking-tight">Daftar Isi</h3>
-                    <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600">
-                        <!-- Diisi otomatis -->
-                    </ul>
+                <div class="page p-10 text-slate-800 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-slate-200 pb-3 text-slate-900 tracking-tight">Daftar Isi</h3>
+                        <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600"></ul>
+                    </div>
+                    <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
                 </div>
-                <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
             </div>
         </div>
     </main>
 
-    <!-- KONTROL NAVIGASI HALAMAN -->
     <div class="flex justify-center items-center gap-6 mb-8 text-sm">
-        <button onclick="$('#book').turn('previous')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">◀ Sebelumnya</button>
+        <button onclick="prevPage()" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">◀ Sebelumnya</button>
         <span id="page-number" class="font-mono text-slate-400">Halaman: 1</span>
-        <button onclick="$('#book').turn('next')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">Selanjutnya ▶</button>
+        <button onclick="nextPage()" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">Selanjutnya ▶</button>
     </div>
 
-    <!-- MODAL POPUP: FORM DATA (TAMBAH & EDIT) -->
     <div id="writer-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
@@ -100,22 +77,22 @@
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 text-xl">&times;</button>
             </div>
             <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4 text-sm text-slate-300">
-                <input type="hidden" id="form-edit-index" value="">
+                <input type="hidden" id="form-edit-id" value="">
                 <div>
                     <label class="block font-medium mb-1">Judul Masalah / Kode Error</label>
-                    <input type="text" id="form-title" required placeholder="Contoh: Overheat pada Motor Konveyor Utama" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="form-title" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Kategori / Lokasi / Mesin</label>
-                    <input type="text" id="form-category" required placeholder="Contoh: Assembly Line 2 / Inverter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="form-category" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Deskripsi & Gejala Masalah</label>
-                    <textarea id="form-problem" rows="3" required placeholder="Jelaskan kondisi mesin saat error terjadi..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
+                    <textarea id="form-problem" rows="3" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Langkah Solusi / Perbaikan</label>
-                    <textarea id="form-solution" rows="4" required placeholder="Langkah-langkah penanganan..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
+                    <textarea id="form-solution" rows="4" required class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 no-scrollbar"></textarea>
                 </div>
                 <div class="pt-2 flex justify-end gap-3">
                     <button type="button" onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl">Batal</button>
@@ -125,58 +102,80 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
-        let defaultData = [
-            {
-                title: "Error E-04 Overcurrent Inverter",
-                category: "Line 1 - Motor Conveyor",
-                problem: "Inverter Delta mendadak trip dan menampilkan kode E-04 saat beban material penuh pada jalur assembly robot.",
-                solution: "1. Periksa kekencangan kabel terminal output U-V-W.\n2. Cek bearing motor konveyor, lakukan pemberian grease karena sempat macet.\n3. Lakukan autotuning ulang parameter akselerasi diatur ke 2.5 detik."
-            },
-            {
-                title: "ESP32 Disconnected From Broker",
-                category: "IoT Gateway - Facility Monitoring",
-                problem: "Modul IoT Wemos D1 R32 kehilangan koneksi MQTT secara berkala setiap 15 menit, menyebabkan data logging terputus.",
-                solution: "1. Update script firmware dengan menambahkan logika auto-reconnect WiFi dan MQTT client loop.\n2. Berikan kapasitor elco 10uF pada jalur VCC 3.3V untuk meredam noise tegangan drop saat transmisi data."
-            }
-        ];
+        // Inisialisasi Supabase menggunakan kredensial milikmu
+        const SUPABASE_URL = 'https://neapdsjsqpcsxhxjwyik.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lYXBkc2pzcXBjc3hoeGp3eWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0Nzg0NjgsImV4cCI6MjA5NDA1NDQ2OH0.0MK6HwbDBA9jTj-_ESGvs-ErCvcnQqlqAVGqEv_gG-w';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let database = JSON.parse(localStorage.getItem('manual_book_db')) || defaultData;
+        let database = [];
         let currentRole = 'reader';
 
         $(document).ready(function() {
-            buildBookEngine();
-            updateTableOfContents();
-            checkRoleUI();
+            fetchDataFromSupabase();
         });
 
-        // Setup & Render Ulang Struktur Buku Dinamis
-        function buildBookEngine() {
+        // Ambil Data Nyata dari Supabase
+        async function fetchDataFromSupabase() {
+            let { data, error } = await supabase
+                .from('troubleshooting_logs')
+                .select('*')
+                .order('created_at', { ascending: true }); // Mengurutkan berdasarkan data terlama
+
+            if (error) {
+                console.error("Gagal mengambil data dari Supabase:", error);
+                alert("Gagal memuat data dari database!");
+            } else {
+                database = data || [];
+                initBook();
+            }
+        }
+
+        function initBook() {
             renderPagesFromDatabase();
+            updateTableOfContents();
+            
             $('#book').turn({
-                acceleration: true,
-                gradients: true,
-                elevation: 50,
-                when: {
-                    turned: function(e, page) { $('#page-number').text("Halaman: " + page); }
-                }
+                width: 900, height: 550, acceleration: true, gradients: true, elevation: 50,
+                when: { turned: function(e, page) { $('#page-number').text("Halaman: " + page); } }
             });
+            checkRoleUI();
+        }
+
+        function rebuildBook(targetPage = 1) {
+            const initialPagesHTML = `
+                <div class="hard flex flex-col justify-between p-12 text-center border-r border-slate-950">
+                    <div class="mt-8">
+                        <span class="text-xs font-semibold tracking-widest text-indigo-400 uppercase">System Maintenance</span>
+                        <h2 class="text-3xl font-extrabold mt-2 tracking-tight">KUMPULAN LOG MASALAH & SOLUSI</h2>
+                        <div class="w-16 h-1 bg-indigo-500 mx-auto mt-6 rounded-full"></div>
+                    </div>
+                    <p class="text-xs text-slate-400">Klik ujung halaman atau gunakan tombol di bawah untuk membuka buku</p>
+                </div>
+                <div class="page p-10 text-slate-800 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xl font-bold border-b-2 border-slate-200 pb-3 text-slate-900 tracking-tight">Daftar Isi</h3>
+                        <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600"></ul>
+                    </div>
+                    <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
+                </div>
+            `;
+            $('#book').turn('destroy');
+            $('#book-wrapper').html('<div id="book">' + initialPagesHTML + '</div>');
+            initBook();
+            setTimeout(() => { jumpToPage(targetPage); }, 100);
         }
 
         function renderPagesFromDatabase() {
-            $('.dynamic-page').remove();
-
             database.forEach((item, index) => {
                 let pageNumberLeft = (index * 2) + 2;
                 let pageNumberRight = (index * 2) + 3;
 
                 let pageLeftHTML = `
-                    <div class="page dynamic-page p-10 text-slate-800 flex flex-col justify-between border-r border-slate-200">
+                    <div class="page p-10 text-slate-800 flex flex-col justify-between border-r border-slate-200">
                         <div>
                             <div class="flex justify-between items-start">
                                 <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-md mb-3">${item.category}</span>
-                                <!-- Tombol Kelola Edit (Hanya tampil di mode writer via CSS class 'writer-action') -->
                                 <button onclick="openModal('edit', ${index})" class="writer-action hidden text-xs font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-md transition-colors">✏️ Edit Log</button>
                             </div>
                             <h4 class="text-lg font-bold text-slate-900 leading-tight">${item.title}</h4>
@@ -190,7 +189,7 @@
                 `;
 
                 let pageRightHTML = `
-                    <div class="page dynamic-page p-10 text-slate-800 flex flex-col justify-between">
+                    <div class="page p-10 text-slate-800 flex flex-col justify-between">
                         <div>
                             <h5 class="text-xs font-bold tracking-wider uppercase text-emerald-600">✅ Langkah Perbaikan / Solusi:</h5>
                             <p class="text-sm text-slate-700 mt-2 font-medium leading-relaxed">${item.solution.replace(/\n/g, '<br>')}</p>
@@ -201,7 +200,6 @@
                         </div>
                     </div>
                 `;
-
                 $('#book').append(pageLeftHTML).append(pageRightHTML);
             });
         }
@@ -209,7 +207,6 @@
         function updateTableOfContents() {
             let listContainer = $('#table-of-contents');
             listContainer.empty();
-
             database.forEach((item, index) => {
                 let targetPage = (index * 2) + 2;
                 listContainer.append(`
@@ -223,6 +220,8 @@
         }
 
         function jumpToPage(pageNumber) { $('#book').turn('page', pageNumber); }
+        function prevPage() { $('#book').turn('previous'); }
+        function nextPage() { $('#book').turn('next'); }
 
         function switchRole(role) {
             currentRole = role;
@@ -236,7 +235,6 @@
             checkRoleUI();
         }
 
-        // Tampilkan/Sembunyikan tombol edit & tambah berdasarkan role saat ini
         function checkRoleUI() {
             if(currentRole === 'writer') {
                 $('#add-log-btn').removeClass('hidden').addClass('flex');
@@ -250,28 +248,21 @@
         function searchBook() {
             let query = $('#search-input').val().toLowerCase();
             if(query.trim() === "") return;
-
             let foundIndex = database.findIndex(item => 
                 item.title.toLowerCase().includes(query) || 
                 item.problem.toLowerCase().includes(query) || 
                 item.category.toLowerCase().includes(query)
             );
-
-            if (foundIndex !== -1) {
-                let targetPage = (foundIndex * 2) + 2;
-                jumpToPage(targetPage);
-            }
+            if (foundIndex !== -1) { jumpToPage((foundIndex * 2) + 2); }
         }
 
-        // Buka modal untuk Tambah baru ATAU Edit data lama
         function openModal(mode, index = null) {
             if (mode === 'edit' && index !== null) {
                 let targetData = database[index];
                 $('#modal-title').text('✏️ Edit Dokumentasi Kasus');
                 $('#submit-btn').text('Perbarui Halaman');
-                $('#form-edit-index').val(index); // Simpan index data yang mau diedit
+                $('#form-edit-id').val(targetData.id); // Simpan UUID/ID Supabase
                 
-                // Isi form dengan data lama
                 $('#form-title').val(targetData.title);
                 $('#form-category').val(targetData.category);
                 $('#form-problem').val(targetData.problem);
@@ -279,7 +270,7 @@
             } else {
                 $('#modal-title').text('➕ Tambah Dokumentasi Kasus');
                 $('#submit-btn').text('Simpan ke Buku');
-                $('#form-edit-index').val(''); // kosongkan index (mode tambah)
+                $('#form-edit-id').val(''); 
                 $('#log-form')[0].reset();
             }
             $('#writer-modal').removeClass('hidden').addClass('flex');
@@ -287,10 +278,10 @@
 
         function closeModal() { $('#writer-modal').addClass('hidden').removeClass('flex'); }
 
-        // Interseptor Submit Form (Bisa membedakan Aksi Tambah atau Aksi Edit)
-        function handleFormSubmit(e) {
+        // Aksi Submit Form (Insert & Update Supabase)
+        async function handleFormSubmit(e) {
             e.preventDefault();
-            let editIndex = $('#form-edit-index').val();
+            let logId = $('#form-edit-id').val();
 
             let logData = {
                 title: $('#form-title').val(),
@@ -299,30 +290,37 @@
                 solution: $('#form-solution').val()
             };
 
-            let targetPage;
-
-            if (editIndex !== "") {
-                // Skenario 1: EDIT DATA LAMA
-                database[editIndex] = logData;
-                targetPage = (parseInt(editIndex) * 2) + 2; // Halaman tempat log tersebut berada
-            } else {
-                // Skenario 2: TAMBAH DATA BARU
-                database.push(logData);
-                targetPage = (database.length * 2); // Halaman paling akhir
-            }
-
-            // Simpan perubahan ke LocalStorage
-            localStorage.setItem('manual_book_db', JSON.stringify(database));
-
-            // Refresh Engine Turn.js agar efek tumpukan kertasnya dihitung ulang
-            $('#book').turn('destroy');
-            buildBookEngine();
-            updateTableOfContents();
-            checkRoleUI();
             closeModal();
 
-            // Efek auto-flip menuju halaman target yang dimanipulasi
-            setTimeout(() => { jumpToPage(targetPage); }, 350);
+            if (logId !== "") {
+                // Skenario Update Data
+                let { error } = await supabase
+                    .from('troubleshooting_logs')
+                    .update(logData)
+                    .eq('id', logId);
+
+                if (!error) {
+                    // Update lokal array dan refresh buku di halaman yang sama
+                    let idx = database.findIndex(item => item.id == logId);
+                    database[idx] = { ...database[idx], ...logData };
+                    rebuildBook((idx * 2) + 2);
+                } else {
+                    alert("Gagal memperbarui data!");
+                }
+            } else {
+                // Skenario Insert Data Baru
+                let { data, error } = await supabase
+                    .from('troubleshooting_logs')
+                    .insert([logData])
+                    .select();
+
+                if (!error && data) {
+                    database.push(data[0]);
+                    rebuildBook(database.length * 2);
+                } else {
+                    alert("Gagal menyimpan data baru!");
+                }
+            }
         }
     </script>
 </body>
