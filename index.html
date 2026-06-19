@@ -81,8 +81,8 @@
     <main class="flex-grow flex items-center justify-center p-4">
         <!-- Loader sederhana saat memuat data cloud -->
         <div id="loading-screen" class="absolute text-center bg-slate-900/80 backdrop-blur-sm inset-0 z-40 flex flex-col items-center justify-center gap-3" aria-hidden="true">
-            <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-sm text-slate-400 font-medium">Menghubungkan ke Cloud Supabase...</p>
+            <div id="spinner" class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+            <p id="loading-text" class="text-sm text-slate-400 font-medium">Menghubungkan ke Cloud Supabase...</p>
         </div>
 
         <div id="book" class="bg-slate-950 rounded-2xl overflow-hidden invisible" role="region" aria-label="Buku Troubleshooting">
@@ -198,7 +198,13 @@
 
         const debouncedSearch = debounce(searchBook, 300);
 
-        // [READ] Ambil data dari Supabase atau fallback
+        // helper: wrapper untuk menambahkan timeout pada Promise
+        function promiseWithTimeout(promise, ms) {
+            const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms));
+            return Promise.race([promise, timeout]);
+        }
+
+        // [READ] Ambil data dari Supabase atau fallback (dengan timeout)
         async function fetchDataFromSupabase() {
             $('#loading-screen').removeClass('hidden').addClass('flex');
 
@@ -210,21 +216,31 @@
             }
 
             try {
-                const { data, error } = await supabase
+                // Batasi waktu tunggu network ke 6 detik
+                const timeoutMs = 6000;
+                const selectPromise = supabase
                     .from('troubleshooting_logs')
                     .select('*')
                     .order('id', { ascending: true });
 
+                // jika timeout -> exception -> fallback
+                const result = await promiseWithTimeout(selectPromise, timeoutMs);
+
+                // result diharapkan berupa { data, error }
+                const { data, error } = result || {};
                 if (error) throw error;
 
                 database = data || [];
                 renderAndInit();
                 initRealtime();
             } catch (err) {
-                console.error('Gagal memuat data dari Supabase:', err);
-                alert('Gagal memuat data dari Supabase. Menampilkan data contoh lokal. Periksa pengaturan Supabase di file.');
-                database = fallbackData;
-                renderAndInit();
+                console.error('Gagal memuat data dari Supabase atau timeout:', err);
+                // Tampilkan pesan singkat di UI dan gunakan fallback setelah 1 detik
+                $('#loading-text').text('Tidak bisa terhubung ke Supabase. Menampilkan data lokal.');
+                setTimeout(() => {
+                    database = fallbackData;
+                    renderAndInit();
+                }, 800);
             }
         }
 
