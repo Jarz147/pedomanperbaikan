@@ -67,12 +67,12 @@
     <div class="max-w-5xl w-full mx-auto px-4 mt-6 flex flex-col md:flex-row justify-between items-center gap-3">
         <div class="relative w-full md:w-72">
             <label for="search-input" class="sr-only">Cari masalah atau kode error</label>
-            <input type="search" id="search-input" aria-label="Cari masalah atau kode error" oninput="debouncedSearch()" placeholder="Cari masalah atau kode error..." class="w-full bg-slate-800/60 border border-slate-700 rounded-xl py-2 pl-4 pr-10 text-sm text-slate-200">
+            <input type="search" id="search-input" aria-label="Cari masalah atau kode error" oninput="debouncedSearch()" placeholder="Cari masalah atau kode error..." class="w-full bg-slate-800/60 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200" />
             <span class="absolute right-3 top-2.5 text-slate-500">🔍</span>
         </div>
 
         <!-- Tombol Tambah Log Cloud -->
-        <button id="add-log-btn" onclick="openModal('add')" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-lg shadow-indigo-600/20 items-center gap-2" aria-hidden="true">
+        <button id="add-log-btn" onclick="openModal('add')" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-lg shadow-indigo-600/20 items-center gap-2">
             <span>➕</span> Tambah Masalah Baru
         </button>
     </div>
@@ -80,7 +80,7 @@
     <!-- MAIN AREA: BUKU DIGITAL -->
     <main class="flex-grow flex items-center justify-center p-4">
         <!-- Loader sederhana saat memuat data cloud -->
-        <div id="loading-screen" class="absolute text-center bg-slate-900/80 backdrop-blur-sm inset-0 z-40 flex flex-col items-center justify-center gap-3" aria-hidden="true">
+        <div id="loading-screen" class="absolute text-center bg-slate-900/80 backdrop-blur-sm inset-0 z-40 flex flex-col items-center justify-center gap-3 hidden" aria-hidden="true">
             <div id="spinner" class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
             <p id="loading-text" class="text-sm text-slate-400 font-medium">Menghubungkan ke Cloud Supabase...</p>
         </div>
@@ -111,9 +111,9 @@
 
     <!-- KONTROL NAVIGASI HALAMAN -->
     <div class="flex justify-center items-center gap-6 mb-8 text-sm">
-        <button id="prev-btn" onclick="$('#book').turn('previous')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors" aria-label="Sebelumnya">◀ Sebelumnya</button>
+        <button id="prev-btn" onclick="$('#book').turn('previous')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors" aria-label="Sebelumnya">Sebelumnya</button>
         <span id="page-number" class="font-mono text-slate-400" aria-live="polite">Halaman: 1</span>
-        <button id="next-btn" onclick="$('#book').turn('next')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors" aria-label="Selanjutnya">Selanjutnya ▶</button>
+        <button id="next-btn" onclick="$('#book').turn('next')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors" aria-label="Selanjutnya">Selanjutnya</button>
     </div>
 
     <!-- MODAL POPUP: FORM DATA -->
@@ -127,11 +127,11 @@
                 <input type="hidden" id="form-edit-id" value="">
                 <div>
                     <label class="block font-medium mb-1">Judul Masalah / Kode Error</label>
-                    <input type="text" id="form-title" required placeholder="Contoh: Overheat pada Motor Konveyor Utama" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none text-slate-200">
+                    <input type="text" id="form-title" required placeholder="Contoh: Overheat pada Motor Konveyor Utama" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none text-slate-200" />
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Kategori / Lokasi / Mesin</label>
-                    <input type="text" id="form-category" required placeholder="Contoh: Assembly Line 2 / Inverter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none text-slate-200">
+                    <input type="text" id="form-category" required placeholder="Contoh: Assembly Line 2 / Inverter" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none text-slate-200" />
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Deskripsi & Gejala Masalah</label>
@@ -153,7 +153,8 @@
     <script>
         // === PENTING: GANTI DENGAN URL & ANON KEY MILIK ANDA ===
         const SUPABASE_URL = "https://neapdsjsqpcsxhxjwyik.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lYXBkc2pzcXBjc3hoeGp3eWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0Nzg0NjgsImV4cCI6MjA5NDA1NDQ2OH0.0MK6HwbDBA9jTj-_ESGvs-ErCvcnQqlqAVGqEv_gG-w"; // <- Jangan commit kunci produksi ke repo publik
+        // Gunakan placeholder kosong di repo publik. Isi key saat deploy melalui environment/config.
+        const SUPABASE_ANON_KEY = ""; // <- Jangan commit kunci produksi ke repo publik
 
         // Inisialisasi Klien Supabase (Format Objek Global Library v2)
         let supabase;
@@ -171,7 +172,13 @@
 
         // Contoh fallback data lokal (jika Supabase tidak tersedia)
         const fallbackData = [
-            { id: 1, title: 'Contoh: Motor Overheat', category: 'Assembly Line 1', problem: 'Motor panas berlebih setelah 2 jam operasi.', solution: 'Periksa beban, bersihkan kipas pendingin, periksa bearing.' }
+            {
+                id: 1,
+                title: 'Contoh: Motor Overheat',
+                category: 'Assembly Line 1',
+                problem: 'Motor panas berlebih setelah 2 jam operasi. Terdengar suara berisik, getaran meningkat dan sensor suhu menunjukkan kenaikan tajam.',
+                solution: 'Matikan mesin, biarkan mendingin. Periksa beban, cek kondisi bantalan, bersihkan kipas pendingin, periksa sambungan listrik dan pastikan ventilasi tidak terhalang. Jika masalah berulang, lakukan pengukuran arus dan ganti bearing jika sudah aus.'
+            }
         ];
 
         $(document).ready(function() {
@@ -208,8 +215,8 @@
         async function fetchDataFromSupabase() {
             $('#loading-screen').removeClass('hidden').addClass('flex');
 
-            if (!supabase) {
-                console.warn('Supabase tidak tersedia, menggunakan data lokal fallback.');
+            if (!supabase || !SUPABASE_ANON_KEY) {
+                console.warn('Supabase tidak tersedia, menggunakan data lokal fallback. Pastikan SUPABASE_ANON_KEY diisi saat deploy.');
                 database = fallbackData;
                 renderAndInit();
                 return;
@@ -283,8 +290,8 @@
                             <div class="flex justify-between items-start gap-2">
                                 <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-md mb-3 truncate max-w-[180px]">${safeCategory}</span>
                                 <div class="writer-action hidden flex gap-1">
-                                    <button onclick="openModal('edit', ${index})" class="text-[11px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded-md transition-colors" aria-label="Edit">✏️</button>
-                                    <button onclick="deleteLog(${item.id})" class="text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors" aria-label="Hapus">🗑️</button>
+                                    <button onclick="openModal('edit', ${index})" class="text-[11px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded-md transition-colors" aria-label="Edit">Edit</button>
+                                    <button onclick="deleteLog(${item.id})" class="text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors" aria-label="Hapus">Hapus</button>
                                 </div>
                             </div>
                             <h4 class="text-lg font-bold text-slate-900 leading-tight">${safeTitle}</h4>
@@ -422,8 +429,8 @@
                 solution: $('#form-solution').val()
             };
 
-            if (!supabase) {
-                alert('Supabase tidak aktif — perubahan tidak dikirim ke cloud pada saat ini.');
+            if (!supabase || !SUPABASE_ANON_KEY) {
+                alert('Supabase tidak aktif — perubahan tidak dikirim ke cloud pada saat ini. Isi SUPABASE_ANON_KEY pada konfigurasi saat deploy.');
                 closeModal();
                 $('#loading-screen').addClass('hidden').removeClass('flex');
                 return;
@@ -459,7 +466,7 @@
             if (confirmDelete) {
                 $('#loading-screen').removeClass('hidden').addClass('flex');
 
-                if (!supabase) {
+                if (!supabase || !SUPABASE_ANON_KEY) {
                     alert('Supabase tidak aktif — penghapusan tidak dapat dilakukan.');
                     $('#loading-screen').addClass('hidden').removeClass('flex');
                     return;
