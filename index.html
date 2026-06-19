@@ -9,8 +9,6 @@
     <!-- jQuery & Turn.js untuk Efek Buku -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/turn.js/3/turn.min.js"></script>
-    <!-- Supabase JS Client library v2 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         #book {
@@ -37,7 +35,7 @@
     <header class="p-4 bg-slate-900/50 backdrop-blur-md border-b border-slate-800 flex justify-between items-center px-8">
         <div class="flex items-center gap-3">
             <span class="text-2xl">📖</span>
-            <h1 class="text-lg font-bold tracking-wider text-indigo-400">LOG-BOOK // SUPABASE DIGITAL MANUAL</h1>
+            <h1 class="text-lg font-bold tracking-wider text-indigo-400">LOG-BOOK // DIGITAL MANUAL</h1>
         </div>
         
         <!-- Switch Role -->
@@ -54,7 +52,7 @@
             <span class="absolute right-3 top-2.5 text-slate-500">🔍</span>
         </div>
         
-        <!-- Tombol Tambah Log Cloud -->
+        <!-- Tombol Tambah Log -->
         <button id="add-log-btn" onclick="openModal('add')" class="hidden bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-xl text-sm shadow-lg shadow-indigo-600/20 items-center gap-2 transition-all">
             <span>➕</span> Tambah Masalah Baru
         </button>
@@ -62,17 +60,12 @@
 
     <!-- MAIN AREA: BUKU DIGITAL -->
     <main class="flex-grow flex items-center justify-center p-4">
-        <!-- Loader sederhana saat memuat data cloud -->
-        <div id="loading-screen" class="absolute text-center bg-slate-900/80 backdrop-blur-sm inset-0 z-40 flex flex-col items-center justify-center gap-3">
-            <div class="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-sm text-slate-400 font-medium">Menghubungkan ke Cloud Supabase...</p>
-        </div>
-
-        <div id="book" class="bg-slate-950 rounded-2xl overflow-hidden invisible">
+        <div id="book" class="bg-slate-950 rounded-2xl overflow-hidden">
+            
             <!-- Halaman 1: Cover Depan -->
             <div class="hard flex flex-col justify-between p-12 text-center border-r border-slate-950">
                 <div class="mt-8">
-                    <span class="text-xs font-semibold tracking-widest text-indigo-400 uppercase">System Maintenance Log</span>
+                    <span class="text-xs font-semibold tracking-widest text-indigo-400 uppercase">System Maintenance</span>
                     <h2 class="text-3xl font-extrabold mt-2 tracking-tight">KUMPULAN LOG MASALAH & SOLUSI</h2>
                     <div class="w-16 h-1 bg-indigo-500 mx-auto mt-6 rounded-full"></div>
                 </div>
@@ -84,7 +77,7 @@
                 <div>
                     <h3 class="text-xl font-bold border-b-2 border-slate-200 pb-3 text-slate-900 tracking-tight">Daftar Isi</h3>
                     <ul id="table-of-contents" class="mt-6 space-y-3 text-sm font-medium text-slate-600">
-                        <!-- Diisi otomatis dari Postgres -->
+                        <!-- Diisi otomatis -->
                     </ul>
                 </div>
                 <span class="text-xs text-slate-400 font-mono text-center">Hal. 1</span>
@@ -99,7 +92,7 @@
         <button onclick="$('#book').turn('next')" class="bg-slate-800/80 border border-slate-700 hover:bg-slate-700 px-4 py-2 rounded-xl transition-colors">Selanjutnya ▶</button>
     </div>
 
-    <!-- MODAL POPUP: FORM DATA -->
+    <!-- MODAL POPUP: FORM DATA (TAMBAH & EDIT) -->
     <div id="writer-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-4">
@@ -107,7 +100,7 @@
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-200 text-xl">&times;</button>
             </div>
             <form id="log-form" onsubmit="handleFormSubmit(event)" class="space-y-4 text-sm text-slate-300">
-                <input type="hidden" id="form-edit-id" value="">
+                <input type="hidden" id="form-edit-index" value="">
                 <div>
                     <label class="block font-medium mb-1">Judul Masalah / Kode Error</label>
                     <input type="text" id="form-title" required placeholder="Contoh: Overheat pada Motor Konveyor Utama" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 focus:outline-none focus:border-indigo-500">
@@ -126,7 +119,7 @@
                 </div>
                 <div class="pt-2 flex justify-end gap-3">
                     <button type="button" onclick="closeModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl">Batal</button>
-                    <button type="submit" id="submit-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-medium shadow-lg">Simpan ke Cloud</button>
+                    <button type="submit" id="submit-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-xl font-medium shadow-lg">Simpan ke Buku</button>
                 </div>
             </form>
         </div>
@@ -134,55 +127,41 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // === KONEKSI SUPABASE OTOMATIS ===
-        const SUPABASE_URL = "https://neapdsjsqpcsxhxjwyik.supabase.co"; 
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lYXBkc2pzcXBjc3hoeGp3eWlrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0Nzg0NjgsImV4cCI6MjA5NDA1NDQ2OH0.0MK6HwbDBA9jTj-_ESGvs-ErCvcnQqlqAVGqEv_gG-w";
-        
-        // Inisialisasi Klien Supabase (Format Objek Global Library v2)
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let defaultData = [
+            {
+                title: "Error E-04 Overcurrent Inverter",
+                category: "Line 1 - Motor Conveyor",
+                problem: "Inverter Delta mendadak trip dan menampilkan kode E-04 saat beban material penuh pada jalur assembly robot.",
+                solution: "1. Periksa kekencangan kabel terminal output U-V-W.\n2. Cek bearing motor konveyor, lakukan pemberian grease karena sempat macet.\n3. Lakukan autotuning ulang parameter akselerasi diatur ke 2.5 detik."
+            },
+            {
+                title: "ESP32 Disconnected From Broker",
+                category: "IoT Gateway - Facility Monitoring",
+                problem: "Modul IoT Wemos D1 R32 kehilangan koneksi MQTT secara berkala setiap 15 menit, menyebabkan data logging terputus.",
+                solution: "1. Update script firmware dengan menambahkan logika auto-reconnect WiFi dan MQTT client loop.\n2. Berikan kapasitor elco 10uF pada jalur VCC 3.3V untuk meredam noise tegangan drop saat transmisi data."
+            }
+        ];
 
-        let database = [];
+        let database = JSON.parse(localStorage.getItem('manual_book_db')) || defaultData;
         let currentRole = 'reader';
 
         $(document).ready(function() {
-            fetchDataFromSupabase();
+            buildBookEngine();
+            updateTableOfContents();
+            checkRoleUI();
         });
 
-        // [READ] Ambil data real-time dari PostgreSQL Supabase
-        async function fetchDataFromSupabase() {
-            $('#loading-screen').removeClass('hidden').addClass('flex');
-            
-            let { data, error } = await supabase
-                .from('troubleshooting_logs')
-                .select('*')
-                .order('id', { ascending: true });
-
-            if (error) {
-                alert("Gagal memuat data dari Supabase. Pastikan Anda sudah membuat tabel 'troubleshooting_logs' di dashboard.");
-                console.error(error);
-                $('#loading-screen').addClass('hidden').removeClass('flex');
-                return;
-            }
-
-            database = data || [];
-            
-            // Re-render engine turn.js buku jika sudah diinisialisasi sebelumnya
-            if ($('#book').data('turn')) {
-                $('#book').turn('destroy');
-            }
-
+        // Setup & Render Ulang Struktur Buku Dinamis
+        function buildBookEngine() {
             renderPagesFromDatabase();
-            updateTableOfContents();
-            
-            // Jalankan animasi membalik halaman
             $('#book').turn({
-                acceleration: true, gradients: true, elevation: 50,
-                when: { turned: function(e, page) { $('#page-number').text("Halaman: " + page); } }
+                acceleration: true,
+                gradients: true,
+                elevation: 50,
+                when: {
+                    turned: function(e, page) { $('#page-number').text("Halaman: " + page); }
+                }
             });
-
-            $('#book').removeClass('invisible');
-            $('#loading-screen').addClass('hidden').removeClass('flex');
-            checkRoleUI();
         }
 
         function renderPagesFromDatabase() {
@@ -195,12 +174,10 @@
                 let pageLeftHTML = `
                     <div class="page dynamic-page p-10 text-slate-800 flex flex-col justify-between border-r border-slate-200">
                         <div>
-                            <div class="flex justify-between items-start gap-2">
-                                <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-md mb-3 truncate max-w-[180px]">${item.category}</span>
-                                <div class="writer-action hidden flex gap-1">
-                                    <button onclick="openModal('edit', ${index})" class="text-[11px] font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded-md transition-colors cursor-pointer">✏️ Edit</button>
-                                    <button onclick="deleteLog(${item.id})" class="text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors cursor-pointer">🗑️ Hapus</button>
-                                </div>
+                            <div class="flex justify-between items-start">
+                                <span class="inline-block bg-indigo-50 text-indigo-700 text-xs font-semibold px-2.5 py-1 rounded-md mb-3">${item.category}</span>
+                                <!-- Tombol Kelola Edit (Hanya tampil di mode writer via CSS class 'writer-action') -->
+                                <button onclick="openModal('edit', ${index})" class="writer-action hidden text-xs font-semibold text-amber-600 bg-amber-50 hover:bg-amber-100 px-2.5 py-1 rounded-md transition-colors">✏️ Edit Log</button>
                             </div>
                             <h4 class="text-lg font-bold text-slate-900 leading-tight">${item.title}</h4>
                             <div class="mt-5">
@@ -219,7 +196,7 @@
                             <p class="text-sm text-slate-700 mt-2 font-medium leading-relaxed">${item.solution.replace(/\n/g, '<br>')}</p>
                         </div>
                         <div class="flex justify-between items-center border-t border-slate-100 pt-3">
-                            <span class="text-[10px] text-slate-400">ID Cloud: #${item.id}</span>
+                            <span class="text-[10px] text-slate-400">Sistem Log Digital</span>
                             <span class="text-xs text-slate-400 font-mono">Hal. ${pageNumberRight}</span>
                         </div>
                     </div>
@@ -250,12 +227,6 @@
         function switchRole(role) {
             currentRole = role;
             if(role === 'writer') {
-                let pin = prompt("Masukkan PIN Sandi Khusus Writer (Simulasi):", "1234");
-                if (pin !== "1234") {
-                    alert("PIN salah! Anda dikembalikan sebagai Reader.");
-                    currentRole = 'reader';
-                    return;
-                }
                 $('#btn-writer').addClass('bg-indigo-600 text-white shadow-lg').removeClass('text-slate-400');
                 $('#btn-reader').removeClass('bg-indigo-600 text-white shadow-lg').addClass('text-slate-400');
             } else {
@@ -265,6 +236,7 @@
             checkRoleUI();
         }
 
+        // Tampilkan/Sembunyikan tombol edit & tambah berdasarkan role saat ini
         function checkRoleUI() {
             if(currentRole === 'writer') {
                 $('#add-log-btn').removeClass('hidden').addClass('flex');
@@ -291,21 +263,23 @@
             }
         }
 
+        // Buka modal untuk Tambah baru ATAU Edit data lama
         function openModal(mode, index = null) {
             if (mode === 'edit' && index !== null) {
                 let targetData = database[index];
-                $('#modal-title').text('✏️ Edit Dokumentasi Kasus di Cloud');
-                $('#submit-btn').text('Perbarui Cloud');
-                $('#form-edit-id').val(targetData.id); 
+                $('#modal-title').text('✏️ Edit Dokumentasi Kasus');
+                $('#submit-btn').text('Perbarui Halaman');
+                $('#form-edit-index').val(index); // Simpan index data yang mau diedit
                 
+                // Isi form dengan data lama
                 $('#form-title').val(targetData.title);
                 $('#form-category').val(targetData.category);
                 $('#form-problem').val(targetData.problem);
                 $('#form-solution').val(targetData.solution);
             } else {
-                $('#modal-title').text('➕ Tambah Dokumentasi Kasus ke Cloud');
-                $('#submit-btn').text('Simpan ke Cloud');
-                $('#form-edit-id').val('');
+                $('#modal-title').text('➕ Tambah Dokumentasi Kasus');
+                $('#submit-btn').text('Simpan ke Buku');
+                $('#form-edit-index').val(''); // kosongkan index (mode tambah)
                 $('#log-form')[0].reset();
             }
             $('#writer-modal').removeClass('hidden').addClass('flex');
@@ -313,12 +287,11 @@
 
         function closeModal() { $('#writer-modal').addClass('hidden').removeClass('flex'); }
 
-        // [CREATE & UPDATE] Eksekusi Kirim ke Cloud Supabase
-        async function handleFormSubmit(e) {
+        // Interseptor Submit Form (Bisa membedakan Aksi Tambah atau Aksi Edit)
+        function handleFormSubmit(e) {
             e.preventDefault();
-            $('#loading-screen').removeClass('hidden').addClass('flex');
-            
-            let idLog = $('#form-edit-id').val();
+            let editIndex = $('#form-edit-index').val();
+
             let logData = {
                 title: $('#form-title').val(),
                 category: $('#form-category').val(),
@@ -326,45 +299,30 @@
                 solution: $('#form-solution').val()
             };
 
-            if (idLog !== "") {
-                // [UPDATE] Edit baris data berdasarkan ID
-                const { error } = await supabase
-                    .from('troubleshooting_logs')
-                    .update(logData)
-                    .eq('id', idLog);
+            let targetPage;
 
-                if (error) alert("Gagal update data: " + error.message);
+            if (editIndex !== "") {
+                // Skenario 1: EDIT DATA LAMA
+                database[editIndex] = logData;
+                targetPage = (parseInt(editIndex) * 2) + 2; // Halaman tempat log tersebut berada
             } else {
-                // [CREATE] Masukkan data baris baru
-                const { error } = await supabase
-                    .from('troubleshooting_logs')
-                    .insert([logData]);
-
-                if (error) alert("Gagal menyimpan data: " + error.message);
+                // Skenario 2: TAMBAH DATA BARU
+                database.push(logData);
+                targetPage = (database.length * 2); // Halaman paling akhir
             }
 
+            // Simpan perubahan ke LocalStorage
+            localStorage.setItem('manual_book_db', JSON.stringify(database));
+
+            // Refresh Engine Turn.js agar efek tumpukan kertasnya dihitung ulang
+            $('#book').turn('destroy');
+            buildBookEngine();
+            updateTableOfContents();
+            checkRoleUI();
             closeModal();
-            // Tarik ulang data ter-update dari Supabase agar halaman sinkron
-            await fetchDataFromSupabase();
-        }
 
-        // [DELETE] Hapus data dari database cloud Supabase
-        async function deleteLog(idCloud) {
-            let confirmDelete = confirm(`Apakah Anda yakin ingin menghapus log ID #${idCloud} secara permanen dari Cloud Supabase?`);
-            if (confirmDelete) {
-                $('#loading-screen').removeClass('hidden').addClass('flex');
-                
-                const { error } = await supabase
-                    .from('troubleshooting_logs')
-                    .delete()
-                    .eq('id', idCloud);
-
-                if (error) {
-                    alert("Gagal menghapus data: " + error.message);
-                }
-                
-                await fetchDataFromSupabase();
-            }
+            // Efek auto-flip menuju halaman target yang dimanipulasi
+            setTimeout(() => { jumpToPage(targetPage); }, 350);
         }
     </script>
 </body>
